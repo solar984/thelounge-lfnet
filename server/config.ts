@@ -99,6 +99,11 @@ type StoragePolicy = {
 	deletionPolicy: "statusOnly" | "everything";
 };
 
+type Bouncer = {
+	staleAfterSeconds: number;
+	lastSeenUpdateIntervalSeconds: number;
+};
+
 export type ConfigType = {
 	public: boolean;
 	host: string | undefined;
@@ -122,6 +127,7 @@ export type ConfigType = {
 	lockNetwork: boolean;
 	messageStorage: string[];
 	storagePolicy: StoragePolicy;
+	bouncer: Bouncer;
 	useHexIp: boolean;
 	webirc?: WebIRC;
 	identd: Identd;

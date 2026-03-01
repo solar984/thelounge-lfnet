@@ -65,6 +65,7 @@ type ClientPushSubscription = {
 export type UserConfig = {
 	log: boolean;
 	password: string;
+	lastSeenAt?: number;
 	sessions: {
 		[token: string]: {
 			lastUse: number;
@@ -91,6 +92,8 @@ class Client {
 	attachedClients!: {
 		[socketId: string]: {token: string; openChannel: number};
 	};
+	staleDisconnectedNetworkUuids!: Set<string> | null;
+	lastSeenInterval!: NodeJS.Timeout | null;
 	config!: UserConfig;
 	id: string;
 	idMsg!: number;
@@ -112,6 +115,8 @@ class Client {
 			awayMessage: "",
 			lastActiveChannel: -1,
 			attachedClients: {},
+			staleDisconnectedNetworkUuids: null,
+			lastSeenInterval: null,
 			config: config,
 			idChan: 1,
 			idMsg: 1,
@@ -203,6 +208,15 @@ class Client {
 			client.networks.forEach((network) => {
 				setTimeout(() => {
 					network.channels.forEach((channel) => channel.loadMessages(client, network));
+
+					const isStaleDisconnected = Boolean(
+						client.staleDisconnectedNetworkUuids?.has(network.uuid)
+					);
+
+					if (isStaleDisconnected) {
+						network.userDisconnected = true;
+						return;
+					}
 
 					if (!network.userDisconnected && network.irc) {
 						network.irc.connect();
@@ -755,6 +769,8 @@ class Client {
 	}
 
 	quit(signOut?: boolean) {
+		this.stopLastSeenUpdates();
+
 		const sockets = this.manager.sockets.sockets;
 		const room = sockets.adapter.rooms.get(this.id);
 
@@ -784,8 +800,9 @@ class Client {
 
 	clientAttach(socketId: string, token: string) {
 		const client = this;
+		const attachedClientsCount = _.size(client.attachedClients);
 
-		if (client.awayMessage && _.size(client.attachedClients) === 0) {
+		if (client.awayMessage && attachedClientsCount === 0) {
 			client.networks.forEach(function (network) {
 				// Only remove away on client attachment if
 				// there is no away message on this network
@@ -797,6 +814,12 @@ class Client {
 
 		const openChannel = client.lastActiveChannel;
 		client.attachedClients[socketId] = {token, openChannel};
+		client.markLastSeen();
+
+		if (attachedClientsCount === 0) {
+			client.startLastSeenUpdates();
+			client.reconnectStaleDisconnectedNetworks();
+		}
 	}
 
 	clientDetach(socketId: string) {
@@ -808,10 +831,14 @@ class Client {
 			client.networks.forEach(function (network) {
 				// Only set away on client deattachment if
 				// there is no away message on this network
-				if (network.irc && !network.awayMessage) {
-					network.irc.raw("AWAY", client.awayMessage);
-				}
-			});
+					if (network.irc && !network.awayMessage) {
+						network.irc.raw("AWAY", client.awayMessage);
+					}
+				});
+		}
+
+		if (_.size(client.attachedClients) === 0) {
+			client.stopLastSeenUpdates();
 		}
 	}
 
@@ -862,8 +889,69 @@ class Client {
 			client.manager.saveUser(client);
 		},
 		5000,
-		{maxWait: 20000}
-	);
+			{maxWait: 20000}
+		);
+
+	startStaleDisconnectedNetworks(uuids: string[]) {
+		if (uuids.length === 0) {
+			return;
+		}
+
+		this.staleDisconnectedNetworkUuids = new Set(uuids);
+	}
+
+	private reconnectStaleDisconnectedNetworks() {
+		if (!this.staleDisconnectedNetworkUuids || this.staleDisconnectedNetworkUuids.size === 0) {
+			return;
+		}
+
+		for (const network of this.networks) {
+			if (!this.staleDisconnectedNetworkUuids.has(network.uuid)) {
+				continue;
+			}
+
+			network.userDisconnected = false;
+
+			if (network.irc && !network.irc.connected) {
+				network.irc.connect();
+			}
+		}
+
+		this.staleDisconnectedNetworkUuids = null;
+		this.save();
+	}
+
+	private markLastSeen() {
+		this.config.lastSeenAt = Date.now();
+		this.save();
+	}
+
+	private startLastSeenUpdates() {
+		this.stopLastSeenUpdates();
+
+		const intervalSeconds = Config.values.bouncer.lastSeenUpdateIntervalSeconds;
+
+		if (!intervalSeconds || intervalSeconds <= 0) {
+			return;
+		}
+
+		this.lastSeenInterval = setInterval(() => {
+			if (_.size(this.attachedClients) === 0) {
+				return;
+			}
+
+			this.markLastSeen();
+		}, intervalSeconds * 1000);
+	}
+
+	private stopLastSeenUpdates() {
+		if (!this.lastSeenInterval) {
+			return;
+		}
+
+		clearInterval(this.lastSeenInterval);
+		this.lastSeenInterval = null;
+	}
 }
 
 export default Client;

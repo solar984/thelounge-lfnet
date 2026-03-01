@@ -76,12 +76,12 @@ class ClientManager {
 
 		// This callback is used by Auth plugins to load users they deem acceptable
 		const callbackLoadUser = (user) => {
-			this.loadUser(user);
+			this.loadUser(user, true);
 		};
 
 		if (!Auth.loadUsers(users, callbackLoadUser)) {
 			// Fallback to loading all users
-			users.forEach((name) => this.loadUser(name));
+			users.forEach((name) => this.loadUser(name, true));
 		}
 	}
 
@@ -110,7 +110,7 @@ class ClientManager {
 		});
 	}
 
-	loadUser(name: string) {
+	loadUser(name: string, isStartup = false) {
 		const userConfig = this.readUserConfig(name);
 
 		if (!userConfig) {
@@ -133,11 +133,124 @@ class ClientManager {
 			}
 		} else {
 			client = new Client(this, name, userConfig);
+
+			if (isStartup) {
+				const staleNetworkUuids = this.getStaleNetworkUuids(userConfig);
+
+				if (staleNetworkUuids.length > 0 && Array.isArray(userConfig.networks)) {
+					const lastSeenAt = this.getLastSeenAt(userConfig);
+					const nick = String(userConfig.networks[0]?.nick || "");
+					const displayName = nick.length > 0 ? `${name} (${nick})` : name;
+
+					for (const network of userConfig.networks) {
+						if (staleNetworkUuids.includes(network.uuid)) {
+							network.userDisconnected = true;
+						}
+					}
+
+					client.startStaleDisconnectedNetworks(staleNetworkUuids);
+					log.info(
+						`User ${colors.bold(displayName)} has stale web activity (last seen ${this.formatAge(
+							lastSeenAt
+						)} ago (${this.formatTimestamp(
+							lastSeenAt
+						)})) and will stay disconnected until they open the web client again.`
+					);
+				}
+			}
+
 			client.connect();
 			this.clients.push(client);
 		}
 
 		return client;
+	}
+
+	private getStaleNetworkUuids(userConfig: UserConfig): string[] {
+		const staleAfterSeconds = Config.values.bouncer.staleAfterSeconds;
+
+		if (!staleAfterSeconds || staleAfterSeconds <= 0) {
+			return [];
+		}
+
+		const lastSeenAt = this.getLastSeenAt(userConfig);
+
+		// If there is no known activity timestamp, keep current behavior.
+		if (!lastSeenAt) {
+			return [];
+		}
+
+		const staleThreshold = Date.now() - staleAfterSeconds * 1000;
+
+		if (lastSeenAt >= staleThreshold) {
+			return [];
+		}
+
+		if (!Array.isArray(userConfig.networks)) {
+			return [];
+		}
+
+		return userConfig.networks
+			.filter((network) => network && !network.userDisconnected && typeof network.uuid === "string")
+			.map((network) => network.uuid);
+	}
+
+	private getLastSeenAt(userConfig: UserConfig): number {
+		let lastSeenAt = Number(userConfig.lastSeenAt || 0);
+
+		if (!lastSeenAt && userConfig.sessions && typeof userConfig.sessions === "object") {
+			for (const session of Object.values(userConfig.sessions)) {
+				if (!session || typeof session.lastUse !== "number") {
+					continue;
+				}
+
+				lastSeenAt = Math.max(lastSeenAt, session.lastUse);
+			}
+		}
+
+		return lastSeenAt;
+	}
+
+	private formatTimestamp(timestamp: number): string {
+		const date = new Date(timestamp);
+		const pad = (num: number) => num.toString().padStart(2, "0");
+
+		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+			date.getHours()
+		)}:${pad(date.getMinutes())}`;
+	}
+
+	private formatAge(timestamp: number): string {
+		let seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+		const units: Array<[string, number]> = [
+			["year", 31536000],
+			["month", 2628000],
+			["day", 86400],
+			["hour", 3600],
+			["minute", 60],
+		];
+		const parts: string[] = [];
+
+		for (const [unit, unitSeconds] of units) {
+			const value = Math.floor(seconds / unitSeconds);
+
+			if (value <= 0) {
+				continue;
+			}
+
+			parts.push(`${value.toString()} ${unit}${value === 1 ? "" : "s"}`);
+			seconds -= value * unitSeconds;
+
+			if (parts.length === 2) {
+				break;
+			}
+		}
+
+		if (parts.length === 0) {
+			return "less than a minute";
+		}
+
+		return parts.join(", ");
 	}
 
 	getUsers = function () {

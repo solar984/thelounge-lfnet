@@ -355,6 +355,22 @@ module.exports = {
 		deletionPolicy: "statusOnly",
 	},
 
+	// ### `bouncer`
+	//
+	// Controls long-lived bouncer behavior in private mode.
+	//
+	// - `staleAfterSeconds`: If a user has not been seen in the web client for
+	//   this many seconds, their networks are started in a disconnected state
+	//   after a server restart. Set to `0` to disable staleness checks.
+	// - `lastSeenUpdateIntervalSeconds`: While a browser is attached, update
+	//   the user's `lastSeenAt` timestamp in their JSON file at this interval.
+	//
+	// Defaults to two weeks for staleness and 5 minutes for updates.
+	bouncer: {
+		staleAfterSeconds: 1209600,
+		lastSeenUpdateIntervalSeconds: 300,
+	},
+
 	// ### `useHexIp`
 	//
 	// When set to `true`, users' IP addresses will be encoded as hex.
