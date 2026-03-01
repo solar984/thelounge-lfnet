@@ -318,6 +318,10 @@ class Client {
 				});
 		}
 
+		if (Config.values.lockNetwork) {
+			channels = client.syncLockedNetworkChannels(channels);
+		}
+
 		// TODO; better typing for args
 		return new Network({
 			uuid: args.uuid,
@@ -329,7 +333,9 @@ class Client {
 			tls: !!args.tls,
 			userDisconnected: !!args.userDisconnected,
 			rejectUnauthorized: !!args.rejectUnauthorized,
-			password: String(args.password || ""),
+			password: String(
+				Config.values.lockNetwork ? Config.values.defaults.password : args.password || ""
+			),
 			nick: String(args.nick || ""),
 			username: String(args.username || ""),
 			realname: String(args.realname || ""),
@@ -347,6 +353,70 @@ class Client {
 			proxyUsername: String(args.proxyUsername || ""),
 			proxyPassword: String(args.proxyPassword || ""),
 		});
+	}
+
+	private syncLockedNetworkChannels(channels: Chan[]): Chan[] {
+		const synced = [...channels];
+		const configuredAutoChannels = Config.values.autoChannels || {join: [], part: []};
+		const partSet = new Set(
+			this.normalizeConfiguredChannelList(configuredAutoChannels.part).map((name) =>
+				name.toLowerCase()
+			)
+		);
+		const joinList = this.normalizeConfiguredChannelList(configuredAutoChannels.join);
+
+		let filtered = synced.filter((chan) => !partSet.has(chan.name.toLowerCase()));
+		const existing = new Set(filtered.map((chan) => chan.name.toLowerCase()));
+
+		for (const joinChannel of joinList) {
+			const key = joinChannel.toLowerCase();
+
+			if (partSet.has(key) || existing.has(key)) {
+				continue;
+			}
+
+			filtered.push(this.createChannel({name: joinChannel}));
+			existing.add(key);
+		}
+
+		// Ensure order is stable for auto-joined channels.
+		filtered = filtered.sort((a, b) =>
+			a.name.localeCompare(b.name, undefined, {sensitivity: "base"})
+		);
+
+		return filtered;
+	}
+
+	private normalizeConfiguredChannelList(channels: unknown): string[] {
+		if (!Array.isArray(channels)) {
+			return [];
+		}
+
+		const deduped = new Map<string, string>();
+
+		for (let channel of channels) {
+			if (typeof channel !== "string") {
+				continue;
+			}
+
+			channel = channel.trim();
+
+			if (channel.length === 0) {
+				continue;
+			}
+
+			if (!channel.match(/^[#&!+]/)) {
+				channel = `#${channel}`;
+			}
+
+			const key = channel.toLowerCase();
+
+			if (!deduped.has(key)) {
+				deduped.set(key, channel);
+			}
+		}
+
+		return [...deduped.values()];
 	}
 
 	connectToNetwork(args: Record<string, any>, isStartup = false) {

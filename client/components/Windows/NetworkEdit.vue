@@ -32,7 +32,7 @@ export default defineComponent({
 			networkData.value = store.getters.findNetwork(String(route.params.uuid || ""));
 		};
 
-		const handleSubmit = (data: {uuid: string; name: string}) => {
+		const handleSubmit = (data: {uuid: string; name?: string}) => {
 			disabled.value = true;
 			socket.emit("network:edit", data);
 
@@ -40,7 +40,9 @@ export default defineComponent({
 			const network = store.getters.findNetwork(data.uuid);
 
 			if (network) {
-				network.name = network.channels[0].name = data.name;
+				if (typeof data.name === "string" && data.name.length > 0) {
+					network.name = network.channels[0].name = data.name;
+				}
 
 				switchToChannel(network.channels[0]);
 			}

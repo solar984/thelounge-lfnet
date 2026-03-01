@@ -253,15 +253,13 @@ class Network {
 				this.host !== Config.values.defaults.host
 			) {
 				error(this, `The hostname you specified (${this.host}) is not allowed.`);
-				return false;
+					return false;
 			}
 
-			if (Config.values.public) {
-				this.name = Config.values.defaults.name;
-				// Sync lobby channel name
-				this.getLobby().name = Config.values.defaults.name;
-			}
-
+			this.name = Config.values.defaults.name;
+			this.password = Config.values.defaults.password;
+			// Sync lobby channel name
+			this.getLobby().name = Config.values.defaults.name;
 			this.host = Config.values.defaults.host;
 			this.port = Config.values.defaults.port;
 			this.tls = Config.values.defaults.tls;
@@ -396,12 +394,20 @@ class Network {
 
 		this.keepNick = null;
 		this.nick = args.nick;
-		this.host = String(args.host || "");
-		this.name = String(args.name || "") || this.host;
-		this.port = parseInt(args.port, 10);
-		this.tls = !!args.tls;
-		this.rejectUnauthorized = !!args.rejectUnauthorized;
-		this.password = String(args.password || "");
+		this.host = String(Config.values.lockNetwork ? Config.values.defaults.host : args.host || "");
+		this.name = String(Config.values.lockNetwork ? Config.values.defaults.name : args.name || "") ||
+			this.host;
+		this.port = parseInt(
+			String(Config.values.lockNetwork ? Config.values.defaults.port : args.port),
+			10
+		);
+		this.tls = Config.values.lockNetwork ? Config.values.defaults.tls : !!args.tls;
+		this.rejectUnauthorized = Config.values.lockNetwork
+			? Config.values.defaults.rejectUnauthorized
+			: !!args.rejectUnauthorized;
+		this.password = String(
+			Config.values.lockNetwork ? Config.values.defaults.password : args.password || ""
+		);
 		this.username = String(args.username || "");
 		this.realname = String(args.realname || "");
 		this.leaveMessage = String(args.leaveMessage || "");

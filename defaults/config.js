@@ -316,6 +316,28 @@ module.exports = {
 	// This value is set to `false` by default.
 	lockNetwork: false,
 
+	// ### `autoChannels`
+	//
+	// Channel synchronization for locked-network setups.
+	//
+	// - `join`: Channels to ensure are present for all users.
+	// - `part`: Channels to remove from all users.
+	//
+	// Both lists are applied when network configurations are loaded and when a
+	// locked network is created.
+	//
+	// Example:
+	// autoChannels: {
+	//   join: ["#ann"],
+	//   part: ["#announcement"]
+	// }
+	//
+	// Values are normalized like normal channel names (for example `ann` -> `#ann`).
+	autoChannels: {
+		join: [],
+		part: [],
+	},
+
 	// ## User management
 
 	// ### `messageStorage`

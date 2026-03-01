@@ -99,6 +99,11 @@ type StoragePolicy = {
 	deletionPolicy: "statusOnly" | "everything";
 };
 
+type AutoChannels = {
+	join: string[];
+	part: string[];
+};
+
 type Bouncer = {
 	staleAfterSeconds: number;
 	lastSeenUpdateIntervalSeconds: number;
@@ -125,6 +130,7 @@ export type ConfigType = {
 	leaveMessage: string;
 	defaults: Defaults;
 	lockNetwork: boolean;
+	autoChannels: AutoChannels;
 	messageStorage: string[];
 	storagePolicy: StoragePolicy;
 	bouncer: Bouncer;
