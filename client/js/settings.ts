@@ -7,6 +7,39 @@ const defaultSettingConfig = {
 	sync: null,
 };
 
+function applyWindowLogoMode() {
+	const windowBg = getComputedStyle(document.documentElement)
+		.getPropertyValue("--window-bg-color")
+		.trim();
+
+	if (!windowBg) {
+		document.body.classList.remove("theme-dark-window");
+		return;
+	}
+
+	const probe = document.createElement("span");
+	probe.style.color = windowBg;
+	probe.style.display = "none";
+	document.body.appendChild(probe);
+
+	const resolved = getComputedStyle(probe).color;
+	probe.remove();
+
+	const match = resolved.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+
+	if (!match) {
+		document.body.classList.remove("theme-dark-window");
+		return;
+	}
+
+	const r = Number.parseInt(match[1], 10);
+	const g = Number.parseInt(match[2], 10);
+	const b = Number.parseInt(match[3], 10);
+	const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+	document.body.classList.toggle("theme-dark-window", luminance < 150);
+}
+
 const defaultConfig = {
 	syncSettings: {
 		default: true,
@@ -99,10 +132,13 @@ const defaultConfig = {
 			}
 
 			if (hrefAttr.value === themeUrl) {
+				applyWindowLogoMode();
 				return;
 			}
 
 			hrefAttr.value = themeUrl;
+			themeEl.addEventListener("load", applyWindowLogoMode, {once: true});
+			applyWindowLogoMode();
 
 			if (!store.state.serverConfiguration) {
 				return;

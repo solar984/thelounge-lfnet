@@ -698,7 +698,9 @@ p {
 
 #sidebar .logo,
 #sidebar .logo-inverted {
-	height: 45px;
+	height: 64px;
+	width: auto;
+	max-width: 180px;
 }
 
 #sidebar .logo {
@@ -1868,6 +1870,16 @@ part/quit messages where we don't load previews (adds a blank line otherwise) */
 #loading .logo-inverted,
 .window .logo-inverted {
 	display: none; /* In dark themes, inverted logo must be used instead */
+}
+
+body.theme-dark-window #loading .logo,
+body.theme-dark-window .window .logo {
+	display: none;
+}
+
+body.theme-dark-window #loading .logo-inverted,
+body.theme-dark-window .window .logo-inverted {
+	display: inline-block;
 }
 
 #sign-in label,

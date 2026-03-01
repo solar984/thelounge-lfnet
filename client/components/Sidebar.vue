@@ -1,19 +1,19 @@
 <template>
 	<aside id="sidebar" ref="sidebar">
 		<div class="scrollable-area">
-			<div class="logo-container">
-				<img
-					:src="`img/logo-${isPublic() ? 'horizontal-' : ''}transparent-bg.svg`"
-					class="logo"
-					alt="The Lounge"
-					role="presentation"
-				/>
-				<img
-					:src="`img/logo-${isPublic() ? 'horizontal-' : ''}transparent-bg-inverted.svg`"
-					class="logo-inverted"
-					alt="The Lounge"
-					role="presentation"
-				/>
+				<div class="logo-container">
+					<img
+						src="img/logo-horizontal-transparent-bg.svg"
+						class="logo"
+						alt="The Lounge"
+						role="presentation"
+					/>
+					<img
+						src="img/logo-horizontal-transparent-bg-inverted.svg"
+						class="logo-inverted"
+						alt="The Lounge"
+						role="presentation"
+					/>
 				<span
 					v-if="isDevelopment"
 					title="The Lounge has been built in development mode"
@@ -252,19 +252,16 @@ export default defineComponent({
 			document.body.removeEventListener("touchstart", onTouchStart);
 		});
 
-		const isPublic = () => document.body.classList.contains("public");
-
-		return {
-			isDevelopment,
-			store,
-			route,
-			sidebar,
-			toggle,
-			onTouchStart,
-			onTouchMove,
-			onTouchEnd,
-			isPublic,
-		};
+			return {
+				isDevelopment,
+				store,
+				route,
+				sidebar,
+				toggle,
+				onTouchStart,
+				onTouchMove,
+				onTouchEnd,
+			};
 	},
 });
 </script>

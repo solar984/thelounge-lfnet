@@ -8,6 +8,38 @@
  */
 
 (function () {
+	const setWindowLogoMode = () => {
+		const rootStyle = getComputedStyle(document.documentElement);
+		const windowBg = rootStyle.getPropertyValue("--window-bg-color").trim();
+
+		if (!windowBg) {
+			document.body.classList.remove("theme-dark-window");
+			return;
+		}
+
+		const probe = document.createElement("span");
+		probe.style.color = windowBg;
+		probe.style.display = "none";
+		document.body.appendChild(probe);
+
+		const resolved = getComputedStyle(probe).color;
+		probe.remove();
+
+		const match = resolved.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+
+		if (!match) {
+			document.body.classList.remove("theme-dark-window");
+			return;
+		}
+
+		const r = Number.parseInt(match[1], 10);
+		const g = Number.parseInt(match[2], 10);
+		const b = Number.parseInt(match[3], 10);
+		const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+		document.body.classList.toggle("theme-dark-window", luminance < 150);
+	};
+
 	const msg = document.getElementById("loading-page-message");
 
 	if (msg) {
@@ -88,6 +120,9 @@
 		) {
 			themeEl.setAttribute("href", `themes/${userSettings.theme}.css`);
 		}
+
+		setWindowLogoMode();
+		themeEl.addEventListener("load", setWindowLogoMode);
 
 		if (
 			typeof userSettings.userStyles === "string" &&
