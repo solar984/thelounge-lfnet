@@ -167,6 +167,10 @@ class Client {
 			client.config.clientSettings = {};
 		}
 
+		if (_.isPlainObject(Config.values.defaultClientSettings)) {
+			_.defaults(client.config.clientSettings, Config.values.defaultClientSettings);
+		}
+
 		if (!_.isPlainObject(client.config.browser)) {
 			client.config.browser = {};
 		}

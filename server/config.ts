@@ -109,6 +109,10 @@ type Bouncer = {
 	lastSeenUpdateIntervalSeconds: number;
 };
 
+type DefaultClientSettings = {
+	[key: string]: any;
+};
+
 export type ConfigType = {
 	public: boolean;
 	host: string | undefined;
@@ -134,6 +138,7 @@ export type ConfigType = {
 	messageStorage: string[];
 	storagePolicy: StoragePolicy;
 	bouncer: Bouncer;
+	defaultClientSettings: DefaultClientSettings;
 	useHexIp: boolean;
 	webirc?: WebIRC;
 	identd: Identd;

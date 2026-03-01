@@ -109,18 +109,14 @@ export default defineComponent({
 				}
 
 				const style = window.getComputedStyle(input.value);
-				const lineHeight = parseFloat(style.lineHeight) || 1;
+				const minHeight = parseFloat(style.minHeight) || 0;
+				const maxHeight = parseFloat(style.maxHeight) || Number.POSITIVE_INFINITY;
 
-				// Start by resetting height before computing as scrollHeight does not
-				// decrease when deleting characters
-				input.value.style.height = "";
+				// Reset before measuring to allow shrinking on delete.
+				input.value.style.height = "0px";
 
-				// Use scrollHeight to calculate how many lines there are in input, and ceil the value
-				// because some browsers tend to incorrently round the values when using high density
-				// displays or using page zoom feature
-				input.value.style.height = `${
-					Math.ceil(input.value.scrollHeight / lineHeight) * lineHeight
-				}px`;
+				const nextHeight = Math.min(maxHeight, Math.max(minHeight, input.value.scrollHeight));
+				input.value.style.height = `${nextHeight}px`;
 			});
 		};
 

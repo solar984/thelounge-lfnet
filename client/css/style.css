@@ -1029,7 +1029,7 @@ textarea.input {
 	flex-direction: column;
 	flex: 1 1 auto;
 	position: relative;
-	overflow-y: auto;
+	overflow-y: hidden;
 	height: 100%;
 	scrollbar-width: thin;
 	overscroll-behavior: contain;
@@ -2276,6 +2276,7 @@ part/quit messages where we don't load previews (adds a blank line otherwise) */
 	margin: 5px;
 	padding: 0;
 	resize: none;
+	overflow-y: auto;
 	flex: 1 0 auto;
 	align-self: center;
 	touch-action: pan-y;

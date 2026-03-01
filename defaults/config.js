@@ -102,6 +102,35 @@ module.exports = {
 	// This value is set to `"default"` by default.
 	theme: "default",
 
+	// ### `defaultClientSettings`
+	//
+	// Provides default values for per-user client settings for users who do not
+	// already have those settings saved. Users can still override these values
+	// in their own settings.
+	//
+	// Example:
+	// defaultClientSettings: {
+	//   userStyles: [
+	//     "/* Tighten chat rows for ASCII art */",
+	//     "#chat .messages .msg {",
+	//     "  line-height: 1.25 !important;",
+	//     "}",
+	//     "",
+	//     "#chat .time,",
+	//     "#chat .from,",
+	//     "#chat .content {",
+	//     "  padding-top: 0 !important;",
+	//     "  padding-bottom: 0 !important;",
+	//     "}",
+	//     "",
+	//     "/* Optional: monospace for regular messages */",
+	//     "#chat .msg[data-type=\"message\"] .content {",
+	//     "  font-family: Consolas, Menlo, Monaco, \"Courier New\", monospace;",
+	//     "}",
+	//   ].join(\"\\n\")
+	// }
+	defaultClientSettings: {},
+
 	// ### `prefetch`
 	//
 	// When set to `true`, The Lounge will load thumbnails and site descriptions
