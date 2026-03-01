@@ -74,19 +74,52 @@ socket.on("auth:start", async function (serverHash) {
 			hasConfig: store.state.serverConfiguration !== null,
 		});
 	} else {
+		if (shouldStayOnPublicAuthRoute()) {
+			showCurrentAuthRoute();
+			return;
+		}
+
 		await showSignIn();
 	}
 });
 
+function shouldStayOnPublicAuthRoute() {
+	const currentRouteName = router.currentRoute.value.name;
+
+	if (
+		currentRouteName === "SignIn" ||
+		currentRouteName === "Register" ||
+		currentRouteName === "ForgotPassword" ||
+		currentRouteName === "ResetPassword"
+	) {
+		return true;
+	}
+
+	// On initial load the route may not be resolved yet, so fallback to hash check.
+	const hash = window.location.hash || "";
+	return (
+		hash === "#/sign-in" ||
+		hash === "#/register" ||
+		hash === "#/forgot-password" ||
+		hash.startsWith("#/reset-password/")
+	);
+}
+
 async function showSignIn() {
+	showCurrentAuthRoute();
+
+	if (router.currentRoute.value.name !== "SignIn") {
+		await navigate("SignIn");
+	}
+}
+
+function showCurrentAuthRoute() {
 	// TODO: this flashes grey background because it takes a little time for vue to mount signin
 	if (window.g_TheLoungeRemoveLoading) {
 		window.g_TheLoungeRemoveLoading();
 	}
 
-	if (router.currentRoute.value.name !== "SignIn") {
-		await navigate("SignIn");
-	}
+	store.commit("currentUserVisibleError", null);
 }
 
 function reloadPage(message: string) {

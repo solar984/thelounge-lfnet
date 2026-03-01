@@ -18,6 +18,7 @@ import Identification from "./identification";
 import changelog from "./plugins/changelog";
 import inputs from "./plugins/inputs";
 import Auth from "./plugins/auth";
+import registration from "./plugins/registration";
 
 import themes from "./plugins/packages/themes";
 themes.loadLocalThemes();
@@ -91,6 +92,12 @@ export default async function (
 		.disable("x-powered-by")
 		.use(allRequests)
 		.use(addSecurityHeaders)
+		.use(express.json({limit: "10kb"}))
+		.post("/auth/register", registerRequest)
+		.post("/auth/reset/request", passwordResetRequest)
+		.post("/auth/reset/confirm", passwordResetConfirm)
+		.get("/auth/reset/status/:token", passwordResetStatus)
+		.get("/auth/activate/:token", activateRequest)
 		.get("/", indexRequest)
 		.get("/service-worker.js", forceNoCacheRequest)
 		.get("/js/bundle.js.map", forceNoCacheRequest)
@@ -288,6 +295,8 @@ export default async function (
 
 				(await import("./plugins/storage")).default.emptyDir();
 			}
+
+			await registration.close();
 
 			// Forcefully exit after 3 seconds
 			suicideTimeout = setTimeout(() => process.exit(1), 3000);
@@ -862,6 +871,7 @@ function initializeClient(
 function getClientConfiguration(): SharedConfiguration | LockedSharedConfiguration {
 	const common = {
 		fileUpload: Config.values.fileUpload.enable,
+		registrationEnabled: registration.isEnabled(),
 		ldapEnabled: Config.values.ldap.enable,
 		isUpdateAvailable: changelog.isUpdateAvailable,
 		applicationServerKey: manager!.webPush.vapidKeys!.publicKey,
@@ -911,6 +921,231 @@ function getClientConfiguration(): SharedConfiguration | LockedSharedConfigurati
 	};
 
 	return result;
+}
+
+async function registerRequest(req: Request, res: Response) {
+	if (!registration.isEnabled()) {
+		res.status(404).json({error: "registration_disabled"});
+		return;
+	}
+
+	if (!manager) {
+		res.status(503).json({error: "registration_unavailable"});
+		return;
+	}
+
+	const body = req.body as {
+		email?: unknown;
+		password?: unknown;
+	};
+
+	if (typeof body?.email !== "string" || typeof body?.password !== "string") {
+		res.status(400).json({error: "registration_invalid_payload"});
+		return;
+	}
+
+	const email = body.email.trim().toLowerCase();
+
+	if (manager.findClient(email)) {
+		res.status(409).json({error: "registration_user_exists"});
+		return;
+	}
+
+	try {
+		await registration.createPendingRegistration(email, body.password);
+		res.status(200).json({success: true});
+	} catch (error: any) {
+		log.warn(`Registration request failed for ${email}: ${error.message}`);
+		res.status(400).json({error: error.message || "registration_failed"});
+	}
+}
+
+async function passwordResetRequest(req: Request, res: Response) {
+	// Respond with a generic success payload to prevent account enumeration.
+	const genericSuccess = () => res.status(200).json({success: true});
+
+	if (!registration.isEnabled()) {
+		genericSuccess();
+		return;
+	}
+
+	if (!manager) {
+		genericSuccess();
+		return;
+	}
+
+	const body = req.body as {
+		email?: unknown;
+	};
+
+	if (typeof body?.email !== "string") {
+		genericSuccess();
+		return;
+	}
+
+	try {
+		await registration.createPasswordResetRequest(body.email, manager);
+	} catch (error: any) {
+		log.warn(`Password reset request failed for ${body.email}: ${error.message}`);
+	}
+
+	genericSuccess();
+}
+
+async function passwordResetConfirm(req: Request, res: Response) {
+	if (!registration.isEnabled()) {
+		res.status(404).json({error: "password_reset_disabled"});
+		return;
+	}
+
+	if (!manager) {
+		res.status(503).json({error: "password_reset_unavailable"});
+		return;
+	}
+
+	const body = req.body as {
+		token?: unknown;
+		password?: unknown;
+	};
+
+	if (typeof body?.token !== "string" || typeof body?.password !== "string") {
+		res.status(400).json({error: "password_reset_invalid_payload"});
+		return;
+	}
+
+	const result = await registration.resetPassword(body.token, body.password, manager);
+
+	if (result.ok) {
+		res.status(200).json({success: true});
+		return;
+	}
+
+	const statusByReason = {
+		invalid: 400,
+		expired: 410,
+		already_used: 409,
+		disabled: 404,
+		error: 400,
+	};
+	const messageByReason = {
+		invalid: "Invalid password reset token.",
+		expired: "Password reset token has expired.",
+		already_used: "Password reset token has already been used.",
+		disabled: "Password reset is disabled.",
+		error: "Could not reset password.",
+	};
+
+	res.status(statusByReason[result.reason]).json({error: messageByReason[result.reason]});
+}
+
+async function passwordResetStatus(req: Request, res: Response) {
+	if (!registration.isEnabled()) {
+		res.status(404).json({error: "Password reset is disabled."});
+		return;
+	}
+
+	const token = String(req.params.token || "");
+	const result = await registration.getPasswordResetTokenStatus(token);
+
+	if (result.ok) {
+		res.status(200).json({ok: true});
+		return;
+	}
+
+	const statusByReason = {
+		invalid: 400,
+		expired: 410,
+		already_used: 409,
+		disabled: 404,
+	};
+	const messageByReason = {
+		invalid: "Invalid password reset token.",
+		expired: "Password reset token has expired.",
+		already_used: "Password reset token has already been used.",
+		disabled: "Password reset is disabled.",
+	};
+
+	res.status(statusByReason[result.reason]).json({error: messageByReason[result.reason]});
+}
+
+async function activateRequest(req: Request, res: Response) {
+	if (!registration.isEnabled()) {
+		res.status(404).send(renderActivationHtml("Registration is disabled.", false));
+		return;
+	}
+
+	if (!manager) {
+		res.status(503).send(renderActivationHtml("Registration service is not ready.", false));
+		return;
+	}
+
+	const token = String(req.params.token || "");
+	const result = await registration.activate(token, manager);
+
+	if (result.ok) {
+		res.status(200).send(
+			renderActivationHtml(
+				`Account ${escapeHtml(result.email)} has been activated. You can now sign in.`,
+				true
+			)
+		);
+		return;
+	}
+
+	const textByReason = {
+		invalid: "Activation link is invalid.",
+		expired: "Activation link has expired. Register again to receive a new one.",
+		already_used: "Activation link was already used.",
+		already_exists: "An account for this email already exists.",
+		disabled: "Registration is disabled.",
+		error: "Could not activate this account.",
+	};
+
+	const statusByReason = {
+		invalid: 400,
+		expired: 410,
+		already_used: 409,
+		already_exists: 409,
+		disabled: 404,
+		error: 500,
+	};
+
+	res.status(statusByReason[result.reason]).send(renderActivationHtml(textByReason[result.reason], false));
+}
+
+function renderActivationHtml(message: string, success: boolean) {
+	const status = success ? "Activation successful" : "Activation failed";
+
+	return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${status}</title>
+<style>
+body { font-family: sans-serif; margin: 2rem; background: #f6f7f9; color: #1f2328; }
+.box { max-width: 640px; margin: 0 auto; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; padding: 1.5rem; }
+h1 { margin-top: 0; font-size: 1.5rem; }
+a { color: #0969da; }
+</style>
+</head>
+<body>
+<div class="box">
+<h1>${status}</h1>
+<p>${message}</p>
+<p><a href=\"/\">Open The Lounge</a></p>
+</div>
+</body>
+</html>`;
+}
+
+function escapeHtml(input: string) {
+	return input
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/\"/g, "&quot;")
+		.replace(/'/g, "&#39;");
 }
 
 function getServerConfiguration(): ServerConfiguration {

@@ -29,6 +29,22 @@ type FileUpload = {
 	baseUrl?: string;
 };
 
+type RegistrationSmtp = {
+	host: string;
+	port: number;
+	secure: boolean;
+	user: string;
+	password: string;
+};
+
+type Registration = {
+	enable: boolean;
+	from: string;
+	activationBaseUrl: string;
+	tokenTtlMinutes: number;
+	smtp: RegistrationSmtp;
+};
+
 export type Defaults = Pick<
 	Network,
 	| "name"
@@ -99,6 +115,7 @@ export type ConfigType = {
 	prefetchMaxSearchSize: number;
 	prefetchTimeout: number;
 	fileUpload: FileUpload;
+	registration: Registration;
 	transports: string[];
 	leaveMessage: string;
 	defaults: Defaults;

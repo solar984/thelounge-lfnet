@@ -3,9 +3,7 @@
   "description": "The self-hosted Web IRC client",
   "version": "4.4.3",
   "preferGlobal": true,
-  "bin": {
-    "thelounge": "index.js"
-  },
+  "bin": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/thelounge/thelounge.git"
@@ -92,7 +90,7 @@
     "@babel/preset-env": "7.17.10",
     "@fortawesome/fontawesome-free": "5.15.4",
     "@istanbuljs/nyc-config-typescript": "1.0.2",
-    "@textcomplete/core": "0.1.10",
+    "@textcomplete/core": "0.1.12",
     "@textcomplete/textarea": "0.1.13",
     "@types/bcryptjs": "2.4.6",
     "@types/chai": "4.3.5",

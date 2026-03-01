@@ -525,10 +525,10 @@ class Network {
 
 			if (transport.socket) {
 				const isLocalhost = ["127.0.0.1", "::1"].includes(transport.socket.remoteAddress);
-				const isAuthorized = transport.socket.encrypted && transport.socket.authorized;
+				const isEncrypted = Boolean(transport.socket.encrypted);
 
 				status.connected = transport.isConnected();
-				status.secure = isAuthorized || isLocalhost;
+				status.secure = isEncrypted || isLocalhost;
 			}
 		}
 

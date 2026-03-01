@@ -31,6 +31,7 @@
 		</div>
 		<footer id="footer">
 			<span
+				v-if="!store.state.serverConfiguration?.lockNetwork"
 				class="tooltipped tooltipped-n tooltipped-no-touch"
 				aria-label="Connect to network"
 				><router-link

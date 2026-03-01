@@ -1849,6 +1849,9 @@ part/quit messages where we don't load previews (adds a blank line otherwise) */
 }
 
 #sign-in .container,
+#register .container,
+#forgot-password .container,
+#reset-password .container,
 #loading-reload-container,
 #loading-status-container {
 	flex: 1 0 auto;
@@ -1867,18 +1870,31 @@ part/quit messages where we don't load previews (adds a blank line otherwise) */
 	display: none; /* In dark themes, inverted logo must be used instead */
 }
 
-#sign-in label {
+#sign-in label,
+#register label,
+#forgot-password label,
+#reset-password label {
 	display: block;
 	margin-top: 10px;
 	width: 100%;
 }
 
-#sign-in .btn {
+#sign-in .btn,
+#register .btn,
+#forgot-password .btn,
+#reset-password .btn {
 	margin-top: 25px;
 }
 
-#sign-in .error {
+#sign-in .error,
+#register .error {
 	color: #e74c3c;
+	margin-top: 1em;
+	width: 100%;
+}
+
+#register .success {
+	color: #2ecc40;
 	margin-top: 1em;
 	width: 100%;
 }
@@ -2014,11 +2030,17 @@ part/quit messages where we don't load previews (adds a blank line otherwise) */
 	padding-right: 37px;
 }
 
-#sign-in .password-container {
+#sign-in .password-container,
+#register .password-container,
+#forgot-password .password-container,
+#reset-password .password-container {
 	width: 100%;
 }
 
-#sign-in .password-container .reveal-password {
+#sign-in .password-container .reveal-password,
+#register .password-container .reveal-password,
+#forgot-password .password-container .reveal-password,
+#reset-password .password-container .reveal-password {
 	top: 31px;
 }
 

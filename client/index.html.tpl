@@ -47,7 +47,12 @@
 	<meta name="theme-color" content="<%- themeColor %>">
 
 	</head>
-	<body class="<%- public ? " public" : "" %>" data-transports="<%- JSON.stringify(transports) %>">
+	<body
+		class="<%- public ? " public" : "" %>"
+		data-transports="<%- JSON.stringify(transports) %>"
+		data-registration-enabled="<%- registration.enable %>"
+		data-lock-network="<%- lockNetwork %>"
+	>
 		<div id="app"></div>
 		<div id="loading">
 			<div class="window">

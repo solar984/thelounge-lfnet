@@ -49,6 +49,12 @@
 			<div v-if="errorShown" class="error">Authentication failed.</div>
 
 			<button :disabled="inFlight" type="submit" class="btn">Sign in</button>
+			<router-link v-if="registrationEnabled" class="link" :to="{name: 'ForgotPassword'}">
+				Forgot password?
+			</router-link>
+			<router-link v-if="registrationEnabled" class="link" :to="{name: 'Register'}">
+				Create an account
+			</router-link>
 		</form>
 	</div>
 </template>
@@ -70,6 +76,7 @@ export default defineComponent({
 
 		const username = ref(storage.get("user") || "");
 		const password = ref("");
+		const registrationEnabled = document.body.dataset.registrationEnabled === "true";
 
 		const onAuthFailed = () => {
 			inFlight.value = false;
@@ -109,8 +116,17 @@ export default defineComponent({
 			errorShown,
 			username,
 			password,
+			registrationEnabled,
 			onSubmit,
 		};
 	},
 });
 </script>
+
+<style scoped>
+.link {
+	display: block;
+	margin-top: 10px;
+	text-align: center;
+}
+</style>

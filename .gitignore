@@ -7,3 +7,6 @@ package-lock.json
 coverage/
 public/
 dist/
+
+.yarn/
+.yarnrc.yml

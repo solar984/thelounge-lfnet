@@ -2,6 +2,9 @@ import constants from "./constants";
 
 import {createRouter, createWebHashHistory} from "vue-router";
 import SignIn from "../components/Windows/SignIn.vue";
+import Register from "../components/Windows/Register.vue";
+import ForgotPassword from "../components/Windows/ForgotPassword.vue";
+import ResetPassword from "../components/Windows/ResetPassword.vue";
 import Connect from "../components/Windows/Connect.vue";
 import Settings from "../components/Windows/Settings.vue";
 import Help from "../components/Windows/Help.vue";
@@ -26,6 +29,46 @@ const router = createRouter({
 			component: SignIn,
 			beforeEnter(to, from, next) {
 				// Prevent navigating to sign-in when already signed in
+				if (store.state.appLoaded) {
+					next(false);
+					return;
+				}
+
+				next();
+			},
+		},
+		{
+			name: "Register",
+			path: "/register",
+			component: Register,
+			beforeEnter(to, from, next) {
+				// Prevent navigating to registration when already signed in
+				if (store.state.appLoaded) {
+					next(false);
+					return;
+				}
+
+				next();
+			},
+		},
+		{
+			name: "ForgotPassword",
+			path: "/forgot-password",
+			component: ForgotPassword,
+			beforeEnter(to, from, next) {
+				if (store.state.appLoaded) {
+					next(false);
+					return;
+				}
+
+				next();
+			},
+		},
+		{
+			name: "ResetPassword",
+			path: "/reset-password/:token",
+			component: ResetPassword,
+			beforeEnter(to, from, next) {
 				if (store.state.appLoaded) {
 					next(false);
 					return;
@@ -98,7 +141,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
 	// If user is not yet signed in, wait for appLoaded state to change
 	// unless they are trying to open SignIn (which can be triggered in auth.js)
-	if (!store.state.appLoaded && to.name !== "SignIn") {
+	if (
+		!store.state.appLoaded &&
+		to.name !== "SignIn" &&
+		to.name !== "Register" &&
+		to.name !== "ForgotPassword" &&
+		to.name !== "ResetPassword"
+	) {
 		store.watch(
 			(state) => state.appLoaded,
 			() => next()

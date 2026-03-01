@@ -175,37 +175,6 @@
 					</div>
 				</template>
 			</template>
-			<template v-else-if="config.lockNetwork && !store.state.serverConfiguration?.public">
-				<h2>Network settings</h2>
-				<div class="connect-row">
-					<label for="connect:name">Name</label>
-					<input
-						id="connect:name"
-						v-model.trim="defaults.name"
-						class="input"
-						name="name"
-						maxlength="100"
-					/>
-				</div>
-				<div class="connect-row">
-					<label for="connect:password">Password</label>
-					<RevealPassword
-						v-slot:default="slotProps"
-						class="input-wrap password-container"
-					>
-						<input
-							id="connect:password"
-							v-model="defaults.password"
-							class="input"
-							:type="slotProps.isVisible ? 'text' : 'password'"
-							placeholder="Server password (optional)"
-							name="password"
-							maxlength="300"
-						/>
-					</RevealPassword>
-				</div>
-			</template>
-
 			<h2>User preferences</h2>
 			<div class="connect-row">
 				<label for="connect:nick">Nick</label>
@@ -215,12 +184,16 @@
 					class="input nick"
 					name="nick"
 					pattern="[^\s:!@]+"
-					maxlength="100"
+					maxlength="15"
 					required
+					@beforeinput="onNickBeforeInput"
 					@input="onNickChanged"
 				/>
 			</div>
-			<template v-if="!config?.useHexIp">
+			<p v-if="nickLengthError" class="error nick-length-error">
+				Nick cannot be longer than 15 characters.
+			</p>
+			<template v-if="!config?.useHexIp && !isSimplifiedLockedConnect">
 				<div class="connect-row">
 					<label for="connect:username">Username</label>
 					<input
@@ -233,7 +206,7 @@
 					/>
 				</div>
 			</template>
-			<div class="connect-row">
+			<div v-if="!isSimplifiedLockedConnect" class="connect-row">
 				<label for="connect:realname">Real name</label>
 				<input
 					id="connect:realname"
@@ -243,7 +216,7 @@
 					maxlength="300"
 				/>
 			</div>
-			<div class="connect-row">
+			<div v-if="!isSimplifiedLockedConnect" class="connect-row">
 				<label for="connect:leaveMessage">Leave message</label>
 				<input
 					id="connect:leaveMessage"
@@ -254,7 +227,9 @@
 					placeholder="The Lounge - https://thelounge.chat"
 				/>
 			</div>
-			<template v-if="defaults.uuid && !store.state.serverConfiguration?.public">
+			<template
+				v-if="defaults.uuid && !store.state.serverConfiguration?.public && !isSimplifiedLockedConnect"
+			>
 				<div class="connect-row">
 					<label for="connect:commands">
 						Commands
@@ -278,7 +253,7 @@ the server tab on new connection"
 					/>
 				</div>
 			</template>
-			<template v-else-if="!defaults.uuid">
+			<template v-else-if="!defaults.uuid && !isSimplifiedLockedConnect">
 				<div class="connect-row">
 					<label for="connect:channels">Channels</label>
 					<input
@@ -321,7 +296,7 @@ the server tab on new connection"
 					</div>
 				</template>
 			</template>
-			<template v-else>
+			<template v-else-if="!isLockedPrivateMode">
 				<h2 id="label-auth">Authentication</h2>
 				<div class="connect-row connect-auth" role="group" aria-labelledby="label-auth">
 					<label class="opt">
@@ -435,12 +410,16 @@ the server tab on new connection"
 	margin: 0;
 	user-select: text;
 }
+
+#connect .nick-length-error {
+	margin: -4px 0 10px;
+}
 </style>
 
 <script lang="ts">
 import RevealPassword from "./RevealPassword.vue";
 import SidebarToggle from "./SidebarToggle.vue";
-import {defineComponent, nextTick, PropType, ref, watch} from "vue";
+import {computed, defineComponent, nextTick, PropType, ref, watch} from "vue";
 import {useStore} from "../js/store";
 import {ClientNetwork} from "../js/types";
 
@@ -470,6 +449,20 @@ export default defineComponent({
 		const config = ref(store.state.serverConfiguration);
 		const previousUsername = ref(props.defaults?.username);
 		const displayPasswordField = ref(false);
+		const nickLengthError = ref(false);
+		const maxNickLength = 15;
+
+		const isSimplifiedLockedConnect = computed(
+			() =>
+				Boolean(
+					config.value?.lockNetwork &&
+						!store.state.serverConfiguration?.public &&
+						!props.defaults?.uuid
+				)
+		);
+		const isLockedPrivateMode = computed(
+			() => Boolean(config.value?.lockNetwork && !store.state.serverConfiguration?.public)
+		);
 
 		const publicPassword = ref<HTMLInputElement | null>(null);
 
@@ -531,6 +524,12 @@ export default defineComponent({
 		const usernameInput = ref<HTMLInputElement | null>(null);
 
 		const onNickChanged = (event: Event) => {
+			if (props.defaults?.nick && props.defaults.nick.length > maxNickLength) {
+				props.defaults.nick = props.defaults.nick.slice(0, maxNickLength);
+			}
+
+			nickLengthError.value = false;
+
 			if (!usernameInput.value) {
 				return;
 			}
@@ -544,6 +543,26 @@ export default defineComponent({
 			previousUsername.value = (event.target as HTMLInputElement)?.value;
 		};
 
+		const onNickBeforeInput = (event: InputEvent) => {
+			if (!props.defaults?.nick) {
+				return;
+			}
+
+			const isInsert =
+				event.inputType.startsWith("insert") ||
+				event.inputType === "insertFromPaste" ||
+				event.inputType === "insertCompositionText";
+
+			if (!isInsert) {
+				return;
+			}
+
+			if (props.defaults.nick.length >= maxNickLength) {
+				nickLengthError.value = true;
+				event.preventDefault();
+			}
+		};
+
 		const onSubmit = (event: Event) => {
 			const formData = new FormData(event.target as HTMLFormElement);
 			const data: Partial<ClientNetwork> = {};
@@ -551,6 +570,23 @@ export default defineComponent({
 			formData.forEach((value, key) => {
 				data[key] = value;
 			});
+
+			const nick = String(data.nick || props.defaults?.nick || "")
+				.trim()
+				.slice(0, maxNickLength);
+			data.nick = nick;
+
+			if (isSimplifiedLockedConnect.value) {
+				data.username = nick;
+				data.realname = nick;
+				data.sasl = "";
+				data.saslAccount = "";
+				data.saslPassword = "";
+				data.leaveMessage = String(config.value?.defaults.leaveMessage || "");
+				data.join = String(config.value?.defaults.join || "");
+				data.password = String(config.value?.defaults.password || "");
+				data.name = String(config.value?.defaults.name || data.name || "");
+			}
 
 			props.handleSubmit(data as ClientNetwork);
 		};
@@ -563,7 +599,11 @@ export default defineComponent({
 			commandsInput,
 			resizeCommandsInput,
 			setSaslAuth,
+			nickLengthError,
+			isSimplifiedLockedConnect,
+			isLockedPrivateMode,
 			usernameInput,
+			onNickBeforeInput,
 			onNickChanged,
 			onSubmit,
 		};

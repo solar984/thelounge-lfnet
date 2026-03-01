@@ -34,6 +34,7 @@ export function generateChannelContextMenu(
 	network: ClientNetwork
 ): ContextMenuItem[] {
 	const closeChannel = useCloseChannel(channel);
+	const lockNetwork = document.body.dataset.lockNetwork === "true";
 
 	const typeMap = {
 		lobby: "network",
@@ -226,15 +227,17 @@ export function generateChannelContextMenu(
 		});
 	}
 
-	// Add close menu item
-	items.push({
-		label: closeMap[channel.type],
-		type: "item",
-		class: "close",
-		action() {
-			closeChannel();
-		},
-	});
+	// In lockNetwork mode, do not allow removing the configured network from lobby menu.
+	if (!(channel.type === ChanType.LOBBY && lockNetwork)) {
+		items.push({
+			label: closeMap[channel.type],
+			type: "item",
+			class: "close",
+			action() {
+				closeChannel();
+			},
+		});
+	}
 
 	return items;
 }

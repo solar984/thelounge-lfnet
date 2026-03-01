@@ -202,6 +202,37 @@ module.exports = {
 		baseUrl: null,
 	},
 
+	// ### `registration`
+	//
+	// Allow self-service account registration in private mode.
+	//
+	// Registrations are stored in a sqlite database until a user confirms
+	// their email through an activation link.
+	//
+	// The available keys for the `registration` object are:
+	//
+	// - `enable`: Enable registration page and registration endpoints.
+	// - `from`: Sender email address used for activation emails.
+	// - `activationBaseUrl`: Optional public base URL used to build activation links.
+	//   Leave empty to use `host` + `port`.
+	// - `tokenTtlMinutes`: Activation token lifetime in minutes.
+	// - `smtp`: SMTP configuration used to send activation emails.
+	//
+	// This feature is disabled by default.
+	registration: {
+		enable: false,
+		from: "",
+		activationBaseUrl: "",
+		tokenTtlMinutes: 60,
+		smtp: {
+			host: "",
+			port: 587,
+			secure: true,
+			user: "",
+			password: "",
+		},
+	},
+
 	// ### `transports`
 	//
 	// Set `socket.io` transports.
