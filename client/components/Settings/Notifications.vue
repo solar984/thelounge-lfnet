@@ -144,6 +144,7 @@ your nickname or expressions defined in custom highlights."
 <script lang="ts">
 import {computed, defineComponent} from "vue";
 import {useStore} from "../../js/store";
+import {withServerBasePath} from "../../js/server-path";
 import webpush from "../../js/webpush";
 
 export default defineComponent({
@@ -167,7 +168,7 @@ export default defineComponent({
 
 		const playNotification = () => {
 			const pop = new Audio();
-			pop.src = "audio/pop.wav";
+			pop.src = withServerBasePath("/audio/pop.wav");
 
 			const playResult = pop.play();
 

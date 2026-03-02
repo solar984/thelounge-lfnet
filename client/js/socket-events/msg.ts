@@ -1,5 +1,6 @@
 import socket from "../socket";
 import {cleanIrcMessage} from "../../../shared/irc";
+import {withServerBasePath} from "../server-path";
 import {store} from "../store";
 import {switchToChannel} from "../router";
 import {ClientChan, NetChan, ClientMessage} from "../types";
@@ -10,7 +11,7 @@ let pop;
 
 try {
 	pop = new Audio();
-	pop.src = "audio/pop.wav";
+	pop.src = withServerBasePath("/audio/pop.wav");
 	pop.preload = "auto";
 } catch (e) {
 	pop = {
@@ -55,6 +56,9 @@ socket.on("msg", function (data) {
 		}
 	}
 
+	const previousUnread = channel.unread;
+	const previousHighlight = channel.highlight;
+
 	// Keep unread/highlight clear only when this channel is active and the tab is actually in focus.
 	// If the tab is in background, still track unread/highlights so title/favicon can alert.
 	const tabIsActive = document.visibilityState === "visible" && document.hasFocus();
@@ -66,6 +70,30 @@ socket.on("msg", function (data) {
 
 		if (typeof data.unread !== "undefined") {
 			channel.unread = data.unread;
+		}
+	}
+
+	// Server-side counters don't increase for a channel marked as "open", even if this tab is in background.
+	// Compensate locally so title/favicon still alert while tab is inactive.
+	if (isActiveChannel && !tabIsActive && !data.msg.self) {
+		const isUnreadMessageType =
+			data.msg.type === MessageType.MESSAGE || data.msg.type === MessageType.ACTION;
+
+		if (isUnreadMessageType || data.msg.highlight) {
+			const serverUnread = typeof data.unread === "number" ? data.unread : channel.unread;
+
+			if (serverUnread <= previousUnread) {
+				channel.unread = previousUnread + 1;
+			}
+		}
+
+		if (data.msg.highlight) {
+			const serverHighlight =
+				typeof data.highlight === "number" ? data.highlight : channel.highlight;
+
+			if (serverHighlight <= previousHighlight) {
+				channel.highlight = previousHighlight + 1;
+			}
 		}
 	}
 
@@ -123,8 +151,9 @@ function notifyMessage(
 			if (!document.hasFocus() || !activeChannel || activeChannel.channel !== channel) {
 				if (store.state.settings.notification) {
 					try {
-						pop.currentTime = 0;
-						const playResult = pop.play();
+						const popForPlayback = pop.cloneNode(true);
+						popForPlayback.currentTime = 0;
+						const playResult = popForPlayback.play();
 
 						if (playResult && typeof playResult.catch === "function") {
 							playResult.catch(() => {
