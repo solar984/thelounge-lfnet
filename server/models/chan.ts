@@ -64,15 +64,19 @@ class Chan {
 		const chanId = this.id;
 		msg.id = client.idMsg++;
 
-		// If this channel is open in any of the clients, do not increase unread counter
-		const isOpen = _.find(client.attachedClients, {openChannel: chanId}) !== undefined;
+		// Only suppress unread/highlight if this channel is open on all attached clients.
+		// This allows multiple devices/tabs to each receive notifications independently.
+		const attachedClients = Object.values(client.attachedClients);
+		const isOpenEverywhere =
+			attachedClients.length > 0 &&
+			attachedClients.every((attachedClient) => attachedClient.openChannel === chanId);
 
 		if (msg.self) {
 			// reset counters/markers when receiving self-/echo-message
 			this.unread = 0;
 			this.firstUnread = msg.id;
 			this.highlight = 0;
-		} else if (!isOpen) {
+		} else if (!isOpenEverywhere) {
 			if (!this.firstUnread) {
 				this.firstUnread = msg.id;
 			}
