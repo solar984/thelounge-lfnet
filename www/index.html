@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>LFnet Web Chat</title>
+	<meta
+		name="description"
+		content="LFnet web chat on The Lounge. Persistent browser sessions, multi-device access, and secure IRC connectivity."
+	>
+	<link rel="icon" sizes="16x16 32x32 64x64" href="/irc/favicon.ico" type="image/x-icon">
+	<link rel="apple-touch-icon" sizes="180x180" href="/irc/img/logo-grey-bg-180x180px.png">
+	<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+	<div class="bg-glow bg-glow-a" aria-hidden="true"></div>
+	<div class="bg-glow bg-glow-b" aria-hidden="true"></div>
+
+	<header class="site-header">
+		<div class="brand">
+			<img src="/irc/img/logo-horizontal-transparent-bg-inverted.svg" alt="LFnet" class="brand-logo">
+			<p class="brand-subtitle">webchat.lfnet.org</p>
+		</div>
+		<a class="btn btn-outline" href="/irc">Open Web Chat</a>
+	</header>
+
+	<main class="content">
+		<section class="hero card">
+			<p class="eyebrow">Welcome to LFnet</p>
+			<h1>Persistent web-based IRC chat</h1>
+			<p>
+				Web based chat is provided at
+				<a href="/irc">https://webchat.lfnet.org/irc</a>
+				using the
+				<a href="https://thelounge.chat/" target="_blank" rel="noopener noreferrer">The Lounge</a>
+				IRC client.
+			</p>
+			<p>
+				You register and log in and the client will stay running even when you close your browser.
+				You can connect from multiple browsers/devices at the same time.
+			</p>
+			<div class="actions">
+				<a class="btn btn-primary" href="/irc">Launch IRC Client</a>
+				<a class="btn btn-outline" href="#server-info">Server Info</a>
+			</div>
+		</section>
+
+		<section id="server-info" class="card">
+			<h2>irc.lfnet.org</h2>
+			<p>LFnet listens on the following ports:</p>
+			<div class="port-grid">
+				<div class="port-block">
+					<h3>Plaintext IRC</h3>
+					<p class="mono">6665, 6666, 6667, 6668, 6669, 7777</p>
+				</div>
+				<div class="port-block">
+					<h3>TLS</h3>
+					<p class="mono">6679, 6697, 7000</p>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer">
+		<p>LFnet</p>
+	</footer>
+</body>
+</html>

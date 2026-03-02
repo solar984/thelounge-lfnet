@@ -1,0 +1,217 @@
+:root {
+	--bg: #0f141a;
+	--surface: #171d23;
+	--surface-2: #1f2831;
+	--text: #dce5ef;
+	--muted: #9aabbc;
+	--accent: #77abd9;
+	--accent-strong: #8bc4f5;
+	--border: #2a3440;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	min-height: 100%;
+}
+
+body {
+	font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+	background: radial-gradient(1200px 600px at 15% -10%, #26323d 0%, var(--bg) 45%) no-repeat,
+		var(--bg);
+	color: var(--text);
+	line-height: 1.6;
+	position: relative;
+}
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--accent-strong);
+}
+
+.bg-glow {
+	position: fixed;
+	pointer-events: none;
+	filter: blur(48px);
+	opacity: 0.14;
+	z-index: 0;
+}
+
+.bg-glow-a {
+	width: 280px;
+	height: 280px;
+	background: #3f6f97;
+	top: -100px;
+	right: -80px;
+}
+
+.bg-glow-b {
+	width: 240px;
+	height: 240px;
+	background: #5e83a5;
+	bottom: -100px;
+	left: -80px;
+}
+
+.site-header,
+.content,
+.site-footer {
+	position: relative;
+	z-index: 1;
+	max-width: 980px;
+	margin: 0 auto;
+	padding: 0 20px;
+}
+
+.site-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-top: 28px;
+	padding-bottom: 14px;
+}
+
+.brand-logo {
+	width: min(360px, 62vw);
+	height: auto;
+	display: block;
+}
+
+.brand-subtitle {
+	margin: 8px 0 0;
+	color: var(--muted);
+	font-size: 0.95rem;
+}
+
+.content {
+	display: grid;
+	gap: 20px;
+	padding-top: 10px;
+	padding-bottom: 28px;
+}
+
+.card {
+	background: linear-gradient(165deg, rgb(255 255 255 / 2%), transparent 55%), var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 22px;
+	box-shadow: 0 16px 30px rgb(0 0 0 / 22%);
+}
+
+.eyebrow {
+	color: var(--accent-strong);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.78rem;
+	font-weight: 700;
+	margin: 0;
+}
+
+h1,
+h2,
+h3 {
+	font-family: "IBM Plex Sans", "Trebuchet MS", sans-serif;
+	line-height: 1.2;
+	margin: 10px 0 14px;
+}
+
+h1 {
+	font-size: clamp(1.55rem, 3.8vw, 2.5rem);
+}
+
+h2 {
+	font-size: clamp(1.25rem, 2.7vw, 1.7rem);
+}
+
+h3 {
+	font-size: 1rem;
+	margin-bottom: 8px;
+}
+
+p {
+	margin: 0 0 10px;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	padding-top: 6px;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 16px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.btn:hover {
+	transform: translateY(-1px);
+}
+
+.btn-primary {
+	background: linear-gradient(180deg, #2a4a66, #213a51);
+	color: #e8f3ff;
+	border-color: #3f6788;
+}
+
+.btn-outline {
+	background: rgb(255 255 255 / 2%);
+	color: var(--text);
+}
+
+.btn-outline:hover {
+	border-color: #456179;
+}
+
+.port-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.port-block {
+	background: var(--surface-2);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	padding: 12px 14px;
+}
+
+.mono {
+	font-family: "JetBrains Mono", "Consolas", "Menlo", monospace;
+	color: #e2ecf7;
+	font-size: 0.97rem;
+}
+
+.site-footer {
+	padding-bottom: 28px;
+	color: var(--muted);
+	font-size: 0.92rem;
+}
+
+@media (max-width: 760px) {
+	.site-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.card {
+		padding: 18px;
+	}
+}
