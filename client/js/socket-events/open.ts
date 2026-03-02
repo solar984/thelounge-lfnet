@@ -8,7 +8,13 @@ socket.on("open", function (id) {
 	}
 
 	// Don't do anything if the channel is active on this client
-	if (store.state.activeChannel && store.state.activeChannel.channel.id === id) {
+	const isFocusedLocalActiveChannel =
+		store.state.activeChannel &&
+		store.state.activeChannel.channel.id === id &&
+		document.visibilityState === "visible" &&
+		document.hasFocus();
+
+	if (isFocusedLocalActiveChannel) {
 		return;
 	}
 
