@@ -1,23 +1,11 @@
 import socket from "../socket";
 import {cleanIrcMessage} from "../../../shared/irc";
-import {withServerBasePath} from "../server-path";
+import {playNotificationSound} from "../notification-audio";
 import {store} from "../store";
 import {switchToChannel} from "../router";
 import {ClientChan, NetChan, ClientMessage} from "../types";
 import {SharedMsg, MessageType} from "../../../shared/types/msg";
 import {ChanType} from "../../../shared/types/chan";
-
-let pop;
-
-try {
-	pop = new Audio();
-	pop.src = withServerBasePath("/audio/pop.wav");
-	pop.preload = "auto";
-} catch (e) {
-	pop = {
-		play() {},
-	};
-}
 
 socket.on("msg", function (data) {
 	const receivingChannel = store.getters.findChannel(data.chan);
@@ -151,15 +139,7 @@ function notifyMessage(
 			if (!document.hasFocus() || !activeChannel || activeChannel.channel !== channel) {
 				if (store.state.settings.notification) {
 					try {
-						const popForPlayback = pop.cloneNode(true);
-						popForPlayback.currentTime = 0;
-						const playResult = popForPlayback.play();
-
-						if (playResult && typeof playResult.catch === "function") {
-							playResult.catch(() => {
-								// On some browsers/mobile, sound playback can be blocked by autoplay policy.
-							});
-						}
+						playNotificationSound();
 					} catch (exception) {
 						// On mobile, sounds can not be played without user interaction.
 					}

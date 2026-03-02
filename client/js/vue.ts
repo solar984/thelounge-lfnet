@@ -9,6 +9,7 @@ import {router} from "./router";
 import socket from "./socket";
 import "./socket-events"; // this sets up all socket event listeners, do not remove
 import eventbus from "./eventbus";
+import {initNotificationAudio} from "./notification-audio";
 
 import "./webpush";
 import "./keybinds";
@@ -25,6 +26,7 @@ VueApp.use(store, key);
 
 VueApp.mount("#app");
 socket.open();
+initNotificationAudio();
 
 const markActiveChannelAsRead = () => {
 	if (document.visibilityState !== "visible" || !document.hasFocus()) {

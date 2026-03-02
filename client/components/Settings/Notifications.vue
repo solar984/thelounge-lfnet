@@ -144,7 +144,7 @@ your nickname or expressions defined in custom highlights."
 <script lang="ts">
 import {computed, defineComponent} from "vue";
 import {useStore} from "../../js/store";
-import {withServerBasePath} from "../../js/server-path";
+import {playNotificationSound} from "../../js/notification-audio";
 import webpush from "../../js/webpush";
 
 export default defineComponent({
@@ -167,16 +167,7 @@ export default defineComponent({
 		);
 
 		const playNotification = () => {
-			const pop = new Audio();
-			pop.src = withServerBasePath("/audio/pop.wav");
-
-			const playResult = pop.play();
-
-			if (playResult && typeof playResult.catch === "function") {
-				playResult.catch(() => {
-					// Browser policy may block playback when interaction requirements are not met.
-				});
-			}
+			playNotificationSound();
 		};
 
 		const onPushButtonClick = () => {
