@@ -1967,6 +1967,15 @@ body.theme-dark-window .window .logo-inverted {
 	color: #31708f;
 }
 
+#settings .container {
+	flex: 1 1 auto;
+	overflow: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+}
+
 #settings .settings-sync-panel p:last-child {
 	margin-bottom: 0;
 }
