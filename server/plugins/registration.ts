@@ -441,6 +441,10 @@ class RegistrationService {
 		return `${base}/#/reset-password/${token}`;
 	}
 
+	getClientBaseUrl() {
+		return this.getPublicBaseUrl();
+	}
+
 	private getPublicBaseUrl() {
 		const base = Config.values.registration.activationBaseUrl;
 

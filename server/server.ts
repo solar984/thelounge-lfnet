@@ -1115,6 +1115,7 @@ async function activateRequest(req: Request, res: Response) {
 
 function renderActivationHtml(message: string, success: boolean) {
 	const status = success ? "Activation successful" : "Activation failed";
+	const loungeUrl = registration.getClientBaseUrl();
 
 	return `<!doctype html>
 <html lang="en">
@@ -1133,7 +1134,7 @@ a { color: #0969da; }
 <div class="box">
 <h1>${status}</h1>
 <p>${message}</p>
-<p><a href=\"/\">Open The Lounge</a></p>
+<p><a href=\"${escapeHtml(loungeUrl)}\">Open The Lounge</a></p>
 </div>
 </body>
 </html>`;
