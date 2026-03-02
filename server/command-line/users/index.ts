@@ -11,5 +11,6 @@ if (!Config.values.ldap.enable) {
 import list from "./list";
 import remove from "./remove";
 import edit from "./edit";
+import resend from "./resend";
 
-export default [list, remove, edit, add, reset];
+export default [list, remove, edit, resend, add, reset];

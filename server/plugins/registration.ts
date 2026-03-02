@@ -48,6 +48,13 @@ type PasswordResetTokenStatus =
 			reason: "invalid" | "expired" | "already_used" | "disabled";
 	  };
 
+type ResendActivationResult =
+	| {ok: true; email: string; expiresAt: number}
+	| {
+			ok: false;
+			reason: "disabled" | "not_found" | "already_used" | "already_exists" | "error";
+	  };
+
 let sqlite3: any;
 
 try {
@@ -178,6 +185,59 @@ class RegistrationService {
 			activationUrl,
 			expiresAt,
 		};
+	}
+
+	async resendActivationEmail(
+		emailInput: string,
+		manager: ClientManager
+	): Promise<ResendActivationResult> {
+		if (!this.isEnabled()) {
+			return {ok: false, reason: "disabled"};
+		}
+
+		await this.initialize();
+
+		const email = emailInput.trim().toLowerCase();
+
+		if (!this.isValidEmail(email)) {
+			return {ok: false, reason: "error"};
+		}
+
+		if (manager.findClient(email)) {
+			return {ok: false, reason: "already_exists"};
+		}
+
+		const row = await this.get<RegistrationRecord>(
+			"SELECT * FROM pending_registrations WHERE email = ?",
+			email
+		);
+
+		if (!row) {
+			return {ok: false, reason: "not_found"};
+		}
+
+		if (row.consumed_at !== null) {
+			return {ok: false, reason: "already_used"};
+		}
+
+		const createdAt = Date.now();
+		const expiresAt = createdAt + Config.values.registration.tokenTtlMinutes * 60 * 1000;
+		const token = crypto.randomBytes(32).toString("hex");
+
+		await this.run(
+			`UPDATE pending_registrations
+			 SET token = ?, created_at = ?, expires_at = ?, consumed_at = NULL
+			 WHERE email = ?`,
+			token,
+			createdAt,
+			expiresAt,
+			email
+		);
+
+		const activationUrl = this.getActivationUrl(token);
+		await this.sendActivationEmail(email, activationUrl);
+
+		return {ok: true, email, expiresAt};
 	}
 
 	async activate(tokenInput: string, manager: ClientManager): Promise<ActivationResult> {
