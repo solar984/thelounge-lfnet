@@ -65,6 +65,7 @@
 <script lang="ts">
 import RevealPassword from "../RevealPassword.vue";
 import {defineComponent, ref} from "vue";
+import {withServerBasePath} from "../../js/server-path";
 
 export default defineComponent({
 	name: "Register",
@@ -89,12 +90,12 @@ export default defineComponent({
 			errorMessage.value = "";
 			successMessage.value = "";
 
-			try {
-				const response = await fetch("/auth/register", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
+				try {
+					const response = await fetch(withServerBasePath("/auth/register"), {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
 					body: JSON.stringify({
 						email: email.value,
 						password: password.value,

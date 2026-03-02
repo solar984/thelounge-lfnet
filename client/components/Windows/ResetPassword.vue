@@ -77,6 +77,7 @@
 import RevealPassword from "../RevealPassword.vue";
 import {defineComponent, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
+import {withServerBasePath} from "../../js/server-path";
 
 export default defineComponent({
 	name: "ResetPassword",
@@ -120,12 +121,12 @@ export default defineComponent({
 			errorMessage.value = "";
 			successMessage.value = "";
 
-			try {
-				const response = await fetch("/auth/reset/confirm", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
+				try {
+					const response = await fetch(withServerBasePath("/auth/reset/confirm"), {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
 					body: JSON.stringify({
 						token,
 						password: password.value,
@@ -166,8 +167,10 @@ export default defineComponent({
 				return;
 			}
 
-			try {
-				const response = await fetch(`/auth/reset/status/${encodeURIComponent(token)}`);
+				try {
+					const response = await fetch(
+						withServerBasePath(`/auth/reset/status/${encodeURIComponent(token)}`)
+					);
 
 				if (response.ok) {
 					return;

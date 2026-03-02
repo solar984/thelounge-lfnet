@@ -40,6 +40,7 @@
 
 <script lang="ts">
 import {defineComponent, ref} from "vue";
+import {withServerBasePath} from "../../js/server-path";
 
 export default defineComponent({
 	name: "ForgotPassword",
@@ -57,12 +58,12 @@ export default defineComponent({
 
 			inFlight.value = true;
 
-			try {
-				await fetch("/auth/reset/request", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
+				try {
+					await fetch(withServerBasePath("/auth/reset/request"), {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
 					body: JSON.stringify({
 						email: email.value,
 					}),
