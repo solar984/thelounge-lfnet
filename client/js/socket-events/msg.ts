@@ -11,6 +11,7 @@ let pop;
 try {
 	pop = new Audio();
 	pop.src = "audio/pop.wav";
+	pop.preload = "auto";
 } catch (e) {
 	pop = {
 		play() {},
@@ -117,14 +118,21 @@ function notifyMessage(
 		msg.highlight ||
 		(store.state.settings.notifyAllMessages && msg.type === MessageType.MESSAGE)
 	) {
-		if (!document.hasFocus() || !activeChannel || activeChannel.channel !== channel) {
-			if (store.state.settings.notification) {
-				try {
-					pop.play();
-				} catch (exception) {
-					// On mobile, sounds can not be played without user interaction.
+			if (!document.hasFocus() || !activeChannel || activeChannel.channel !== channel) {
+				if (store.state.settings.notification) {
+					try {
+						pop.currentTime = 0;
+						const playResult = pop.play();
+
+						if (playResult && typeof playResult.catch === "function") {
+							playResult.catch(() => {
+								// On some browsers/mobile, sound playback can be blocked by autoplay policy.
+							});
+						}
+					} catch (exception) {
+						// On mobile, sounds can not be played without user interaction.
+					}
 				}
-			}
 
 			if (
 				store.state.settings.desktopNotifications &&

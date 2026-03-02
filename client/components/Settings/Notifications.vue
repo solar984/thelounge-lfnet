@@ -169,8 +169,13 @@ export default defineComponent({
 			const pop = new Audio();
 			pop.src = "audio/pop.wav";
 
-			// eslint-disable-next-line
-			pop.play();
+			const playResult = pop.play();
+
+			if (playResult && typeof playResult.catch === "function") {
+				playResult.catch(() => {
+					// Browser policy may block playback when interaction requirements are not met.
+				});
+			}
 		};
 
 		const onPushButtonClick = () => {
