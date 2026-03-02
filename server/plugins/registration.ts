@@ -537,6 +537,14 @@ class RegistrationService {
 		html: string;
 	}) {
 		let socket = await this.connectSmtp(payload.host, payload.port, payload.secure);
+		const fromEnvelope = this.extractEmailAddress(payload.from);
+		const toEnvelope = this.extractEmailAddress(payload.to);
+		const fromHeader = this.sanitizeHeaderValue(payload.from);
+		const toHeader = this.sanitizeHeaderValue(payload.to);
+		const subjectHeader = this.sanitizeHeaderValue(payload.subject);
+		const dateHeader = new Date().toUTCString();
+		const messageId = this.createMessageId(fromEnvelope || toEnvelope);
+		const boundary = `thelounge-boundary-${crypto.randomBytes(12).toString("hex")}`;
 
 		try {
 			await this.readResponse(socket, [220]);
@@ -566,28 +574,30 @@ class RegistrationService {
 				);
 			}
 
-			await this.sendCommand(socket, `MAIL FROM:<${payload.from}>`, [250]);
-			await this.sendCommand(socket, `RCPT TO:<${payload.to}>`, [250, 251]);
+			await this.sendCommand(socket, `MAIL FROM:<${fromEnvelope}>`, [250]);
+			await this.sendCommand(socket, `RCPT TO:<${toEnvelope}>`, [250, 251]);
 			await this.sendCommand(socket, "DATA", [354]);
 
 			const dataLines = [
-				`From: ${payload.from}`,
-				`To: ${payload.to}`,
-				`Subject: ${payload.subject}`,
+				`Date: ${dateHeader}`,
+				`Message-ID: ${messageId}`,
+				`From: ${fromHeader}`,
+				`To: ${toHeader}`,
+				`Subject: ${subjectHeader}`,
 				"MIME-Version: 1.0",
-				'Content-Type: multipart/alternative; boundary=\"thelounge-boundary\"',
+				`Content-Type: multipart/alternative; boundary="${boundary}"`,
 				"",
-				"--thelounge-boundary",
+				`--${boundary}`,
 				"Content-Type: text/plain; charset=utf-8",
 				"",
 				payload.text,
 				"",
-				"--thelounge-boundary",
+				`--${boundary}`,
 				"Content-Type: text/html; charset=utf-8",
 				"",
 				payload.html,
 				"",
-				"--thelounge-boundary--",
+				`--${boundary}--`,
 				"",
 				".",
 			];
@@ -717,6 +727,35 @@ class RegistrationService {
 			socket.on("data", onData);
 			socket.on("error", onError);
 		});
+	}
+
+	private sanitizeHeaderValue(value: string) {
+		return value.replace(/[\r\n]+/g, " ").trim();
+	}
+
+	private extractEmailAddress(value: string) {
+		const match = value.match(/<([^<>\s@]+@[^<>\s@]+)>/);
+
+		if (match && match[1]) {
+			return match[1];
+		}
+
+		const plain = value.trim().replace(/^["']+|["']+$/g, "");
+
+		if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(plain)) {
+			return plain;
+		}
+
+		throw new Error(`Invalid email address format: ${value}`);
+	}
+
+	private createMessageId(address: string) {
+		const domainFromAddress = address.split("@")[1];
+		const domain = (domainFromAddress || os.hostname() || "localhost")
+			.toLowerCase()
+			.replace(/[^a-z0-9.-]/g, "");
+		const local = `${Date.now().toString(16)}.${crypto.randomBytes(10).toString("hex")}`;
+		return `<${local}@${domain || "localhost"}>`;
 	}
 }
 
