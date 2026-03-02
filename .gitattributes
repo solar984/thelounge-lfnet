@@ -4,3 +4,5 @@
 *.woff binary
 *.woff2 binary
 *.png binary
+*.ico binary
+*.svg text eol=lf
