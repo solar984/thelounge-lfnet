@@ -57,7 +57,7 @@
 
 			<button :disabled="inFlight" type="submit" class="btn">Register</button>
 
-			<router-link class="link" :to="{name: 'SignIn'}">Back to sign in</router-link>
+			<a class="link" :href="signInUrl">Back to sign in</a>
 		</form>
 	</div>
 </template>
@@ -78,6 +78,7 @@ export default defineComponent({
 		const password = ref("");
 		const errorMessage = ref("");
 		const successMessage = ref("");
+		const signInUrl = withServerBasePath("/#/sign-in");
 
 		const onSubmit = async (event: Event) => {
 			event.preventDefault();
@@ -134,6 +135,7 @@ export default defineComponent({
 			password,
 			errorMessage,
 			successMessage,
+			signInUrl,
 			onSubmit,
 		};
 	},

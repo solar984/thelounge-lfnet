@@ -56,7 +56,7 @@
 			<div v-if="errorMessage" class="error">{{ errorMessage }}</div>
 			<div v-if="successMessage" class="success">
 				{{ successMessage }}
-				<router-link class="inline-link" :to="{name: 'SignIn'}">sign in page</router-link>
+				<a class="inline-link" :href="signInUrl">sign in page</a>
 				to sign in.
 			</div>
 
@@ -68,7 +68,7 @@
 			>
 				Set new password
 			</button>
-			<router-link class="link" :to="{name: 'SignIn'}">Back to sign in</router-link>
+			<a class="link" :href="signInUrl">Back to sign in</a>
 		</form>
 	</div>
 </template>
@@ -92,6 +92,7 @@ export default defineComponent({
 		const errorMessage = ref("");
 		const successMessage = ref("");
 		const showResetForm = ref(true);
+		const signInUrl = withServerBasePath("/#/sign-in");
 
 		const onSubmit = async (event: Event) => {
 			event.preventDefault();
@@ -197,6 +198,7 @@ export default defineComponent({
 			errorMessage,
 			successMessage,
 			showResetForm,
+			signInUrl,
 			onSubmit,
 		};
 	},

@@ -33,7 +33,7 @@
 			<div v-if="message" class="success">{{ message }}</div>
 
 			<button :disabled="inFlight" type="submit" class="btn">Send reset link</button>
-			<router-link class="link" :to="{name: 'SignIn'}">Back to sign in</router-link>
+			<a class="link" :href="signInUrl">Back to sign in</a>
 		</form>
 	</div>
 </template>
@@ -48,6 +48,7 @@ export default defineComponent({
 		const inFlight = ref(false);
 		const email = ref("");
 		const message = ref("");
+		const signInUrl = withServerBasePath("/#/sign-in");
 
 		const onSubmit = async (event: Event) => {
 			event.preventDefault();
@@ -80,6 +81,7 @@ export default defineComponent({
 			inFlight,
 			email,
 			message,
+			signInUrl,
 			onSubmit,
 		};
 	},
