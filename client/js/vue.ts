@@ -26,6 +26,25 @@ VueApp.use(store, key);
 VueApp.mount("#app");
 socket.open();
 
+const markActiveChannelAsRead = () => {
+	if (document.visibilityState !== "visible" || !document.hasFocus()) {
+		return;
+	}
+
+	const activeChannel = store.state.activeChannel?.channel;
+
+	if (!activeChannel) {
+		return;
+	}
+
+	activeChannel.unread = 0;
+	activeChannel.highlight = 0;
+	socket.emit("open", activeChannel.id);
+};
+
+window.addEventListener("focus", markActiveChannelAsRead);
+document.addEventListener("visibilitychange", markActiveChannelAsRead);
+
 store.watch(
 	(state) => state.sidebarOpen,
 	(sidebarOpen) => {

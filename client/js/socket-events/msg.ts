@@ -55,9 +55,11 @@ socket.on("msg", function (data) {
 		}
 	}
 
-	// Do not set unread counter for channel if it is currently active on this client
-	// It may increase on the server before it processes channel open event from this client
-	if (!isActiveChannel) {
+	// Keep unread/highlight clear only when this channel is active and the tab is actually in focus.
+	// If the tab is in background, still track unread/highlights so title/favicon can alert.
+	const tabIsActive = document.visibilityState === "visible" && document.hasFocus();
+
+	if (!isActiveChannel || !tabIsActive) {
 		if (typeof data.highlight !== "undefined") {
 			channel.highlight = data.highlight;
 		}
