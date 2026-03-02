@@ -1,6 +1,6 @@
 {
-	"name": "The Lounge",
-	"short_name": "The Lounge",
+	"name": "LFnet IRC",
+	"short_name": "LFnet IRC",
 	"description": "Self-hosted web IRC client",
 	"start_url": ".",
 	"display": "standalone",
