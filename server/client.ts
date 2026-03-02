@@ -39,6 +39,7 @@ const events = [
 	"invite",
 	"join",
 	"kick",
+	"links",
 	"list",
 	"mode",
 	"modelist",
