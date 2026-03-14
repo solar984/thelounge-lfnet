@@ -266,8 +266,8 @@ module.exports = {
 	//
 	// Set `socket.io` transports.
 	//
-	// This value is set to `["polling", "websocket"]` by default.
-	transports: ["polling", "websocket"],
+	// This value is set to `["websocket", "polling"]` by default.
+	transports: ["websocket", "polling"],
 
 	// ### `leaveMessage`
 	//
