@@ -4,7 +4,7 @@ import type {ServerToClientEvents, ClientToServerEvents} from "../../shared/type
 type Socket = rawSocket<ServerToClientEvents, ClientToServerEvents>;
 
 const socket: Socket = io({
-	transports: JSON.parse(document.body.dataset.transports || "['polling', 'websocket']"),
+	transports: JSON.parse(document.body.dataset.transports || '["websocket", "polling"]'),
 	path: window.location.pathname + "socket.io/",
 	autoConnect: false,
 	reconnection: !document.body.classList.contains("public"),
